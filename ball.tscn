@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3 uid="uid://ck3w7olk8fo6h"]
+
+[ext_resource type="Texture2D" uid="uid://c2mj5lfxdbikm" path="res://ball.png" id="1_8w668"]
+[ext_resource type="Script" path="res://ball.gd" id="1_olvtc"]
+[ext_resource type="Script" path="res://RotatingBallSprite.gd" id="3_h8qrx"]
+[ext_resource type="AudioStream" uid="uid://dd73bi6fkj7lt" path="res://Audios/audio-bounce.ogg" id="4_ddxy5"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_03eh4"]
+radius = 32.0
+
+[node name="Ball" type="CharacterBody2D"]
+script = ExtResource("1_olvtc")
+
+[node name="RotatingBallSprite" type="Sprite2D" parent="."]
+texture = ExtResource("1_8w668")
+script = ExtResource("3_h8qrx")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_03eh4")
+
+[node name="Bounce" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_ddxy5")
+volume_db = -15.0

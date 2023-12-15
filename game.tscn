@@ -1,0 +1,134 @@
+[gd_scene load_steps=9 format=3 uid="uid://dx3xoq3ohjhg8"]
+
+[ext_resource type="FontFile" uid="uid://cipk5bhyxin2w" path="res://Fonts/PoetsenOne-Regular.ttf" id="1_0qkk6"]
+[ext_resource type="Texture2D" uid="uid://bfyblj354w1u5" path="res://poke.png" id="1_5dob8"]
+[ext_resource type="PackedScene" uid="uid://diyn1gonq073" path="res://player.tscn" id="1_ecqfh"]
+[ext_resource type="PackedScene" uid="uid://ck3w7olk8fo6h" path="res://ball.tscn" id="2_dw1nd"]
+[ext_resource type="Script" path="res://rival.gd" id="2_ti7qk"]
+
+[sub_resource type="GDScript" id="GDScript_fy82i"]
+script/source = "extends Node2D
+
+var playerScore = 0
+var rivalScore = 0
+var newSpeed = 250
+
+func _ready():
+	_restarGame()
+
+func _restarGame():
+	$Ball.isMoving = false
+	$Ball.direction = Vector2.ZERO
+	$Ball.position = Vector2(1280/2 , 720/2)
+	$RestartTimer.start()
+	$Ball.isMoving = false
+	#$Ball.resetBall()
+
+func _process(delta):
+	$PlayerMarker.text = \"Player \\n\" + str(playerScore)
+	$RivalMarker.text = \"Rival \\n\" + str(rivalScore)
+
+
+func _on_left_limit_body_entered(body):
+	if body is Ball:
+		rivalScore += 1
+		_restarGame()
+		newSpeed = 275 + (log(playerScore - rivalScore) + 1) * 75
+		if is_nan(newSpeed) or is_inf(-newSpeed):
+			$Rival.speed = 250
+		else:
+			$Rival.speed = newSpeed
+		
+		print($Rival.speed)
+
+
+func _on_righ_limit_body_entered(body):
+	if body is Ball:
+		playerScore += 1
+		_restarGame()
+		newSpeed = 275 + ((log(playerScore - rivalScore) + 1) * 75)
+		if is_nan(newSpeed) or is_inf(-newSpeed):
+			$Rival.speed = 250
+		else:
+			$Rival.speed = newSpeed
+		print($Rival.speed)
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3o0yy"]
+resource_local_to_scene = true
+size = Vector2(1280, 25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cmou1"]
+size = Vector2(25, 720)
+
+[node name="Game" type="Node2D"]
+script = SubResource("GDScript_fy82i")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("1_5dob8")
+
+[node name="PlayerMarker" type="Label" parent="."]
+offset_left = 426.0
+offset_top = 40.0
+offset_right = 506.0
+offset_bottom = 80.0
+theme_override_fonts/font = ExtResource("1_0qkk6")
+theme_override_font_sizes/font_size = 22
+text = "Player"
+horizontal_alignment = 1
+
+[node name="RivalMarker" type="Label" parent="."]
+offset_left = 852.0
+offset_top = 40.0
+offset_right = 932.0
+offset_bottom = 80.0
+theme_override_fonts/font = ExtResource("1_0qkk6")
+theme_override_font_sizes/font_size = 22
+text = "Rival"
+horizontal_alignment = 1
+language = "en"
+
+[node name="UpperWall" type="StaticBody2D" parent="."]
+
+[node name="Wall" type="CollisionShape2D" parent="UpperWall"]
+position = Vector2(640, 9)
+shape = SubResource("RectangleShape2D_3o0yy")
+debug_color = Color(0, 0.6, 0.701961, 0.419608)
+
+[node name="LoweWall" type="StaticBody2D" parent="."]
+
+[node name="Wall" type="CollisionShape2D" parent="LoweWall"]
+position = Vector2(640, 711)
+shape = SubResource("RectangleShape2D_3o0yy")
+debug_color = Color(0, 0.6, 0.701961, 0.419608)
+
+[node name="LeftLimit" type="Area2D" parent="."]
+
+[node name="Limit" type="CollisionShape2D" parent="LeftLimit"]
+position = Vector2(-12, 360)
+shape = SubResource("RectangleShape2D_cmou1")
+
+[node name="RighLimit" type="Area2D" parent="."]
+
+[node name="Limit" type="CollisionShape2D" parent="RighLimit"]
+position = Vector2(1292, 360)
+shape = SubResource("RectangleShape2D_cmou1")
+
+[node name="Player" parent="." instance=ExtResource("1_ecqfh")]
+position = Vector2(40, 351)
+
+[node name="Rival" parent="." instance=ExtResource("1_ecqfh")]
+position = Vector2(1240, 323)
+script = ExtResource("2_ti7qk")
+
+[node name="Ball" parent="." instance=ExtResource("2_dw1nd")]
+position = Vector2(640, 360)
+scale = Vector2(0.8, 0.8)
+
+[node name="RestartTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="body_entered" from="LeftLimit" to="." method="_on_left_limit_body_entered"]
+[connection signal="body_entered" from="RighLimit" to="." method="_on_righ_limit_body_entered"]
+[connection signal="timeout" from="RestartTimer" to="Ball" method="_on_restart_timer_timeout"]
